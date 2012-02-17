@@ -31,6 +31,7 @@
 
 -export([start_link/0, start_link/1, start_link/2,
          cmd/1, cmd/2, cmd/3, subscribe/1, subscribe/2,
+         psubscribe/1, psubscribe/2,
          shutdown/1, async_cmd/1, async_cmd/2]).
 
 -record(state, {host, port, pass, db, sock, queue, subscriber, cancelled, acc, buffer, reconnect}).
@@ -116,6 +117,15 @@ subscribe(Channel) ->
 -spec subscribe(atom() | pid(), list() | binary()) -> reference() | {error, term()}.
 subscribe(NameOrPid, Channel) ->
     Packet = redo_redis_proto:package(["SUBSCRIBE", Channel]),
+    gen_server:call(NameOrPid, {subscribe, Packet}, 2000).
+
+-spec psubscribe(list() | binary()) -> reference() | {error, term()}.
+psubscribe(Channel) ->
+    psubscribe(?MODULE, Channel).
+
+-spec psubscribe(atom() | pid(), list() | binary()) -> reference() | {error, term()}.
+psubscribe(NameOrPid, Channel) ->
+    Packet = redo_redis_proto:package(["PSUBSCRIBE", Channel]),
     gen_server:call(NameOrPid, {subscribe, Packet}, 2000).
 
 shutdown(NameOrPid) ->
